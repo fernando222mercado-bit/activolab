@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Acceder · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="login-layout">
+  <section class="login-intro">
+    <span class="eyebrow">PLATAFORMA DE CONTROL DE ACTIVOS</span>
+    <h1>Control de equipo.<br><span class="gradient-text">Sin perder el rastro.</span></h1>
+    <p>Administra equipos informáticos, herramientas, mobiliario y otros activos con un inventario centralizado.</p>
+    <div class="login-points"><span>◉ MySQL persistente</span><span>◉ Contenedores Docker</span><span>◉ Historial de cambios</span></div>
+  </section>
+  <section class="panel login-panel">
+    <div class="panel-content">
+      <div class="pill">ENTORNO DE PRUEBAS</div>
+      <h2>Iniciar sesión</h2>
+      <p class="muted">Ingresa con tu cuenta asignada. El administrador inicial se crea con las credenciales del despliegue.</p>
+      <form action="{{ url_for('login') }}" method="post" class="stack-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label>Usuario<input type="text" name="username" autocomplete="username" required maxlength="80" autofocus></label>
+        <label>Contraseña<input type="password" name="password" autocomplete="current-password" required maxlength="120"></label>
+        <button class="btn btn-primary" type="submit">Ingresar al inventario <span aria-hidden="true">→</span></button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Categorías · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="back-row"><a href="{{ url_for('index') }}">← Volver al inventario</a></div>
+<section class="page-title-row"><div><span class="eyebrow">CONFIGURACIÓN DEL INVENTARIO</span><h1>Categorías de activos</h1><p class="muted">Agrega tipos de equipo según las necesidades de tu organización.</p></div></section>
+<section class="panel form-panel"><form method="post" class="equipment-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="form-grid"><label>Nombre de la categoría<input name="nombre" required maxlength="90" placeholder="Ejemplo: Instrumentos de medición"></label></div>
+<div class="form-actions"><button class="btn btn-primary" type="submit">Agregar categoría</button></div>
+</form></section>
+<section class="panel inventory-panel"><div class="panel-head"><h2>Categorías disponibles</h2><span class="pill">{{ tipos|length }} categorías</span></div><div class="table-scroll"><table><thead><tr><th>ID</th><th>Nombre</th></tr></thead><tbody>{% for tipo in tipos %}<tr><td>{{ tipo.id }}</td><td>{{ tipo.nombre }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

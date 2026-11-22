@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Sistema de inventario de activos">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">▦</span><span>ACTIVO<span class="brand-accent">LAB</span><small>INVENTARIO · LABORATORIO</small></span></a>
+      {% if sesion_activa %}
+      <nav aria-label="Menú principal" class="menu">
+        <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Inventario</a>
+        {% if usuario.rol == "admin" %}<a href="{{ url_for('new_equipment') }}" {% if request.endpoint == 'new_equipment' %}aria-current="page"{% endif %}>Nuevo equipo</a>
+        <a href="{{ url_for('categories') }}" {% if request.endpoint == 'categories' %}aria-current="page"{% endif %}>Categorías</a>
+        <a href="{{ url_for('users') }}">Usuarios</a><a href="{{ url_for('access_log') }}">Accesos</a><a href="{{ url_for('settings') }}">Configuración</a>{% endif %}
+        {% if usuario.rol in ("admin", "almacen") %}
+        <a href="{{ url_for('movements') }}" {% if request.endpoint == 'movements' %}aria-current="page"{% endif %}>Historial</a>{% endif %}
+        <a href="{{ url_for('profile') }}">Mi cuenta</a>
+        <form method="post" action="{{ url_for('logout') }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="nav-logout">Salir</button>
+        </form>
+      </nav>
+      {% else %}<span class="demo-tag">ACCESO DE DEMOSTRACIÓN</span>{% endif %}
+    </div>
+  </header>
+  <main class="wrap page-content">
+    <div class="institution"><span class="dot"></span> {{ org_name }} <span class="separator">/</span> Gestión de activos {% if usuario %}<span class="separator">/</span> {{ usuario.nombre }} · {{ roles[usuario.rol] }}{% endif %}</div>
+    {% with items = get_flashed_messages(with_categories=true) %}
+      {% if items %}<div class="messages" role="status" aria-live="polite">
+        {% for category, message in items %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+      </div>{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="wrap footer">ACTIVOLAB · INVENTARIO DE ACTIVOS · PROTOTIPO DE LABORATORIO</footer>
+</body>
+</html>

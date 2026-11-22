@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar equipo' if equipo else 'Registrar equipo' }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="back-row"><a href="{{ url_for('index') }}">← Volver al inventario</a></div>
+<section class="page-title-row"><div><span class="eyebrow">GESTIÓN DE ACTIVOS</span><h1>{{ 'Editar equipo' if equipo else 'Registrar nuevo equipo' }}</h1><p class="muted">{{ 'Modifica los datos y guarda un movimiento de auditoría.' if equipo else 'Los equipos registrados se guardan en MySQL de forma persistente.' }}</p></div></section>
+{% if errors %}<div class="alert error" role="alert"><strong>Corrige estos datos:</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+<section class="panel form-panel">
+  <form method="post" action="{{ url_for('edit_equipment', equipo_id=equipo.id) if equipo else url_for('new_equipment') }}" class="equipment-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if usuario.rol == "admin" %}<div class="form-section-title">Identificación del activo <span>01 / 02</span></div>
+    <div class="form-grid">
+      <label>Código de inventario <em>*</em><input required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,29}" name="codigo_inventario" maxlength="30" placeholder="INV-007" value="{{ values.get('codigo_inventario', '') }}"><small>Código único; letras, números, puntos, guiones o guiones bajos.</small></label>
+      <label>Número de serie <em>*</em><input required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,59}" name="serie" maxlength="60" placeholder="SN-DEMO-007" value="{{ values.get('serie', '') }}"><small>Serie única. Si no tiene serie, asigna un identificador interno único.</small></label>
+      <label class="full">Descripción del equipo <em>*</em><input required name="descripcion" maxlength="180" placeholder="Ejemplo: Monitor de 24 pulgadas" value="{{ values.get('descripcion', '') }}"></label>
+      <label>Tipo de equipo <em>*</em><select required name="tipo_id"><option value="">Selecciona un tipo</option>{% for item in tipos %}<option value="{{ item.id }}" {% if values.get('tipo_id', '')|string == item.id|string %}selected{% endif %}>{{ item.nombre }}</option>{% endfor %}</select><small>Agrega tipos desde el menú Categorías.</small></label>
+
+      <label>Marca<input name="marca" maxlength="80" placeholder="Marca del equipo" value="{{ values.get('marca', '') or '' }}"></label>
+      <label>Modelo<input name="modelo" maxlength="80" placeholder="Modelo de ejemplo" value="{{ values.get('modelo', '') or '' }}"></label>
+    </div>
+    {% else %}<p class="muted">Activo: {{ equipo.codigo_inventario }} · {{ equipo.descripcion }}. Solo puedes modificar datos operativos.</p>{% endif %}
+    <div class="form-section-title">Ubicación y custodia <span>02 / 02</span></div>
+    <div class="form-grid">
+            <label>Estado <em>*</em><select required name="estado_id"><option value="">Selecciona un estado</option>{% for item in estados if usuario.rol == "admin" or item.nombre != "Baja" %}<option value="{{ item.id }}" {% if values.get('estado_id', '')|string == item.id|string %}selected{% endif %}>{{ item.nombre }}</option>{% endfor %}</select></label>
+      <label>Ubicación <em>*</em><input name="ubicacion" required maxlength="120" placeholder="Almacén / Estante A4" value="{{ values.get('ubicacion', '') }}"></label>
+      <label>Responsable<input name="responsable" maxlength="120" placeholder="Responsable de ejemplo" value="{{ values.get('responsable', 'Sin asignar') or '' }}"></label>
+    </div>
+    <div class="form-actions"><a class="btn btn-ghost" href="{{ url_for('index') }}">Cancelar</a><button class="btn btn-primary" type="submit">{{ 'Guardar cambios' if equipo else 'Registrar equipo' }} →</button></div>
+  </form>
+</section>
+{% endblock %}

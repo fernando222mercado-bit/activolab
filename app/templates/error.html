@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Error · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="panel error-panel"><span class="eyebrow">NO SE PUDO COMPLETAR LA OPERACIÓN</span><h1>Algo salió mal</h1><p>{{ message or 'No se pudo establecer conexión con MySQL o procesar la solicitud. Revisa los contenedores y los registros de Docker.' }}</p><a href="{{ url_for('index') }}" class="btn btn-primary">Volver al inventario</a></section>
+{% endblock %}

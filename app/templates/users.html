@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios · {{ app_name }}{% endblock %}
+{% block content %}
+<section class="page-title-row"><div><span class="eyebrow">ADMINISTRACIÓN DEL SISTEMA</span><h1>Usuarios y permisos</h1><p class="muted">Crea cuentas, asigna perfiles y administra el acceso.</p></div></section>
+<section class="panel form-panel"><form method="post" class="equipment-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><h2>Nueva cuenta</h2><div class="form-grid">
+<label>Usuario<input name="username" required minlength="3" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9_.\-]{2,79}" autocomplete="off"></label>
+<label>Nombre completo<input name="nombre" required maxlength="120"></label>
+<label>Perfil<select name="rol" required>{% for key,label in roles.items() %}<option value="{{ key }}" {% if key=='usuario' %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label>Contraseña inicial<input type="password" name="password" required minlength="10" maxlength="120" autocomplete="new-password"></label></div><div class="form-actions"><button class="btn btn-primary">Crear usuario</button></div></form></section>
+<section class="panel inventory-panel"><div class="panel-head"><h2>Cuentas registradas</h2></div><div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Estado</th><th>Último acceso (servidor)</th><th>Acción</th></tr></thead><tbody>{% for u in cuentas %}<tr><td>{{ u.username }}</td><td>{{ u.nombre }}</td><td>{{ roles[u.rol] }}</td><td>{{ 'Activa' if u.activo else 'Desactivada' }}</td><td>{{ u.ultimo_acceso or 'Sin acceso' }}</td><td><a class="action-link" href="{{ url_for('edit_user',uid=u.id) }}">Editar</a></td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

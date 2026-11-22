@@ -1,0 +1,52 @@
+name: Validacion del inventario
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TEST_USERNAME: demo
+      TEST_PASSWORD: ci_login_ficticio
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sintaxis de Python y Bash
+        run: |
+          python3 -m compileall -q app tests
+          for f in scripts/*.sh; do bash -n "$f"; done
+      - name: Configuracion de laboratorio CI
+        run: |
+          cp .env.example .env
+          sed -i 's/^MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=ci_root_ficticio_123/' .env
+          sed -i 's/^MYSQL_PASSWORD=.*/MYSQL_PASSWORD=ci_mysql_ficticio_123/' .env
+          sed -i 's/^APP_PASSWORD=.*/APP_PASSWORD=ci_login_ficticio/' .env
+          sed -i 's/^FLASK_SECRET_KEY=.*/FLASK_SECRET_KEY=ci_clave_solo_para_pruebas_123456/' .env
+          docker compose config -q
+      - name: Construccion y arranque de los tres servicios
+        run: docker compose up -d --build --wait --wait-timeout 240
+      - name: Validacion HTTP y operaciones de inventario
+        run: python3 tests/integracion.py
+      - name: Comprobar persistencia al recrear contenedores
+        run: |
+          docker compose down
+          docker compose up -d --no-build --wait --wait-timeout 240
+          curl --retry 10 --retry-all-errors -fsS http://127.0.0.1:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["registros"] == 7 and d["estado"] == "ok"; print("Persistencia comprobada:",d)'
+      - name: Respaldo y restauracion aislada
+        run: |
+          archivo=$(bash scripts/respaldo.sh)
+          bash scripts/restaurar.sh "$archivo" --prueba | tee restauracion-ci.txt
+          grep -q 'Restauración de prueba correcta' restauracion-ci.txt
+          grep -q 'ACTIVO-CI01' restauracion-ci.txt
+          grep -q 'cuentas_recuperadas' restauracion-ci.txt
+        shell: bash
+      - name: Diagnostico si falla
+        if: failure()
+        run: docker compose ps && docker compose logs --tail=100
+      - name: Limpiar entorno desechable de CI
+        if: always()
+        run: docker compose down -v --remove-orphans
