@@ -1,22 +1,13 @@
 # ActivoLab 2: usuarios y control de acceso
 
-## Instalación sobre la versión genérica existente
+## Instalación y actualización
 
-1. En el servidor, entra a la carpeta del proyecto que funciona actualmente (la que contiene `compose.yaml` y `.env`).
-2. Antes de actualizar, ejecuta `sudo bash scripts/respaldo.sh` y conserva el respaldo fuera del servidor si es posible.
-3. Descomprime `ActivoLab_Actualizacion_Usuarios.zip` en esa misma carpeta con `unzip -o ~/ActivoLab_Actualizacion_Usuarios.zip`. La actualización no contiene `.env`, datos ni compose.yaml. Así conserva los parámetros del despliegue y el nombre del volumen.
-4. Ejecuta `sudo docker compose config -q`, `sudo docker compose up -d --build --wait --wait-timeout 240` y `sudo docker compose restart nginx`. Si falla, consulta `sudo docker compose logs --tail=100 app db`.
-5. Abre el inventario en su URL habitual. La primera vez se crea el administrador con APP_USERNAME y APP_PASSWORD del .env. La migración añade usuarios, accesos, configuración y actor en movimientos, sin borrar registros anteriores. Si ya existen usuarios, no se reinicializan.
-6. Inicia sesión con ese administrador y entra a Usuarios. Crea las cuentas del jefe y del usuario normal tú mismo; usa contraseñas distintas de mínimo 10 caracteres. No se crean cuentas de prueba con contraseñas públicas.
-
-## Instalación nueva
-
-Descomprime ActivoLab_Usuarios_Proyecto_Final.zip, entra a su carpeta y ejecuta `sudo bash scripts/instalar_requisitos_inventario.sh --deploy .`. No ejecutes una instalación nueva en paralelo si el puerto o el nombre del proyecto Compose ya se utilizan.
+Sigue [Actualización v3](ACTUALIZACION_V3.md). Se mantienen las cuentas existentes y los permisos de v2.
 
 ## Permisos y demostración
 
-- Administrador: altas, edición completa, bajas, categorías, historial, creación/edición/desactivación de cuentas, reinicio de contraseñas, accesos, configuración visible y contraseña propia. No puede desactivar ni degradar su cuenta actual.
-- Jefe de almacén (`almacen`): consultar y filtrar, modificar ubicación, custodio y estado operativo de activos no dados de baja, ver historial. No puede crear activos, editar identificación ni dar de baja.
+- Administrador: altas individuales o masivas, alta de consumibles, mínimos, edición completa, bajas, categorías, historial, creación/edición/desactivación de cuentas, reinicio de contraseñas, accesos, configuración visible y contraseña propia. No puede desactivar ni degradar su cuenta actual.
+- Jefe de almacén (`almacen`): consultar y filtrar, modificar ubicación, custodio y estado operativo de activos no dados de baja, registrar entradas y salidas de consumibles, ver historial. No puede crear activos, editar identificación ni dar de baja.
 - Usuario normal (`usuario`): consulta y filtros, contraseña propia. No puede modificar inventario ni acceder a la bitácora.
 
 Demuestra un alta con el administrador; crea un jefe y un lector. Desde otra ventana privada inicia sesión como jefe y cambia ubicación y responsable. Verifica que el historial registre su usuario. Con el lector, abre `/usuarios` o `/equipos/nuevo` y demuestra HTTP 403. Vuelve al administrador y consulta Accesos: se registran inicio correcto, fallo y cierre explícito, fecha y dirección IP observada. No se registran contraseñas. No equivale a monitoreo de sesiones en tiempo real.
@@ -32,4 +23,4 @@ Demuestra un alta con el administrador; crea un jefe y un lector. Desde otra ven
 
 ## CI y publicación
 
-La prueba de integración en GitHub Actions crea cuentas ficticias, comprueba permisos en rutas GET y POST, cambios operativos, bitácora y desactivación, además de las pruebas anteriores. La ejecución de Docker y CI real debe hacerse en tu servidor/GitHub. Publica una versión nueva de la imagen con `sudo bash scripts/publicar_imagen.sh USUARIO_DOCKERHUB v2.0.0`.
+La prueba de integración en GitHub Actions crea cuentas ficticias, comprueba permisos en rutas GET y POST, cambios operativos, bitácora y desactivación, además de las pruebas anteriores. La ejecución de Docker y CI real debe hacerse en tu servidor/GitHub. Publica una versión nueva de la imagen con `sudo bash scripts/publicar_imagen.sh USUARIO_DOCKERHUB v3.0.0`.

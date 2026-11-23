@@ -6,7 +6,7 @@ mkdir -p backups
 archivo="backups/inventario_$(date -u +%Y%m%d_%H%M%S)_$$.sql"
 tmp=$(mktemp backups/.respaldo.XXXXXX)
 trap 'rm -f -- "$tmp"' EXIT
-docker compose exec -T db sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysqldump -u root --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF "$MYSQL_DATABASE"' > "$tmp"
+docker compose exec -T db sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysqldump --default-character-set=utf8mb4 -u root --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF "$MYSQL_DATABASE"' > "$tmp"
 test -s "$tmp"
 grep -q '^-- Dump completed on' "$tmp"
 mv -- "$tmp" "$archivo"

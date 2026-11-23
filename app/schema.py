@@ -2,6 +2,7 @@
 import os
 from werkzeug.security import generate_password_hash
 from main import get_connection
+from stock_schema import migrate_stock, repair_database, seed_demo
 
 
 def migrate():
@@ -49,10 +50,38 @@ def migrate():
                         raise RuntimeError('Credenciales iniciales inválidas en .env')
                     cur.execute('INSERT INTO usuarios (username,nombre,password_hash,rol) VALUES (%s,%s,%s,\'admin\')',
                                 (user, 'Administrador inicial', generate_password_hash(password)))
+                migrate_stock(cur)
+                cur.execute("SELECT COUNT(*) AS n FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='demo_v3_pendiente'")
+                if cur.fetchone()['n']:
+                    cur.execute('SELECT pendiente FROM demo_v3_pendiente WHERE id=1')
+                    marker=cur.fetchone()
+                    if marker and marker['pendiente']:
+                        seed_demo(cur)
+                        cur.execute('UPDATE demo_v3_pendiente SET pendiente=0 WHERE id=1')
                 conn.commit()
             finally:
                 cur.execute("SELECT RELEASE_LOCK('activolab_schema_v2')")
     print('Esquema de usuarios y auditoría listo.', flush=True)
 
 if __name__ == '__main__':
-    migrate()
+    import sys
+    if len(sys.argv) == 1:
+        migrate()
+    elif sys.argv[1:] in (['--repair-preview'], ['--repair-apply'], ['--demo']):
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT GET_LOCK('activolab_schema_v2',60) AS ok")
+                if cur.fetchone()['ok'] != 1:
+                    raise RuntimeError('No se pudo bloquear la operación')
+                try:
+                    if sys.argv[1] == '--demo':
+                        seed_demo(cur)
+                        print('Datos ficticios cargados; registros previos conservados.')
+                    else:
+                        changed, skipped = repair_database(cur, sys.argv[1] == '--repair-apply')
+                        print(f'Filas con texto reparable: {changed}; conflictos omitidos: {skipped}.')
+                    conn.commit()
+                finally:
+                    cur.execute("SELECT RELEASE_LOCK('activolab_schema_v2')")
+    else:
+        raise SystemExit('Argumento desconocido')

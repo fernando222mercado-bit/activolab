@@ -23,10 +23,11 @@ if [[ "$modo" == --prueba ]]; then
     sleep 2
   done
   [[ "$listo" == 1 ]] || { docker logs --tail=50 "$nombre" >&2; echo "MySQL temporal no está listo." >&2; exit 1; }
-  docker exec -i "$nombre" sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysql -u root inventario_prueba' < "$archivo"
-  docker exec "$nombre" sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root inventario_prueba -e "SELECT COUNT(*) AS equipos_recuperados FROM equipos; SELECT COUNT(*) AS movimientos_recuperados FROM movimientos; SELECT codigo_inventario, descripcion FROM equipos ORDER BY id; SELECT COUNT(*) AS cuentas_recuperadas FROM usuarios; SELECT COUNT(*) AS accesos_recuperados FROM accesos;"'
+  docker exec -i "$nombre" sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysql --default-character-set=utf8mb4 -u root inventario_prueba' < "$archivo"
+  docker exec "$nombre" sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --default-character-set=utf8mb4 -u root inventario_prueba -e "SELECT COUNT(*) AS equipos_recuperados FROM equipos; SELECT COUNT(*) AS movimientos_recuperados FROM movimientos; SELECT codigo_inventario, descripcion FROM equipos ORDER BY id; SELECT COUNT(*) AS cuentas_recuperadas FROM usuarios; SELECT COUNT(*) AS accesos_recuperados FROM accesos; SELECT COUNT(*) AS consumibles_recuperados FROM consumibles; SELECT COUNT(*) AS movimientos_consumibles_recuperados FROM movimientos_consumibles;"'
   echo 'Restauración de prueba correcta. La base activa no se modificó.'
 else
+  grep -q 'CREATE TABLE `consumibles`' "$archivo" || { echo 'Respaldo anterior a v3: restaura en un entorno aislado con la versión correspondiente; no mezcles tablas.' >&2; exit 1; }
   echo 'ATENCIÓN: se sobrescribirán las tablas activas con el respaldo seleccionado.'
   read -r -p 'Escribe RESTAURAR para confirmar: ' confirmar
   [[ "$confirmar" == RESTAURAR ]] || { echo 'Cancelado.'; exit 1; }
@@ -34,8 +35,8 @@ else
   echo 'Servicios detenidos. Si falla el proceso, permanecerán detenidos para permitir recuperación.'
   seguridad=$(bash scripts/respaldo.sh)
   echo "Respaldo previo: $seguridad"
-  docker compose exec -T db sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysql -u root "$MYSQL_DATABASE"' < "$archivo"
-  docker compose exec -T db sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root "$MYSQL_DATABASE" -e "SELECT COUNT(*) AS equipos_recuperados FROM equipos; SELECT COUNT(*) AS movimientos_recuperados FROM movimientos;"'
+  docker compose exec -T db sh -ec 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; exec mysql --default-character-set=utf8mb4 -u root "$MYSQL_DATABASE"' < "$archivo"
+  docker compose exec -T db sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --default-character-set=utf8mb4 -u root "$MYSQL_DATABASE" -e "SELECT COUNT(*) AS equipos_recuperados FROM equipos; SELECT COUNT(*) AS movimientos_recuperados FROM movimientos;"'
   docker compose up -d --no-build app nginx
   echo 'Restauración aplicada. Comprueba /health y el inventario.'
 fi

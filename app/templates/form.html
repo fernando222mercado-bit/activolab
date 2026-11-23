@@ -9,6 +9,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     {% if usuario.rol == "admin" %}<div class="form-section-title">Identificación del activo <span>01 / 02</span></div>
     <div class="form-grid">
+      {% if not equipo %}<label class="full">Cantidad de unidades<input type="number" name="cantidad" min="1" max="200" required value="{{ values.get('cantidad','1') }}"><small>Si registras varias unidades, el código y la serie actúan como prefijos; se añade -001, -002, etc. Las series generadas son identificadores internos, no números de fabricante. Edita cada unidad para registrar su serie real.</small></label>{% endif %}
       <label>Código de inventario <em>*</em><input required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,29}" name="codigo_inventario" maxlength="30" placeholder="INV-007" value="{{ values.get('codigo_inventario', '') }}"><small>Código único; letras, números, puntos, guiones o guiones bajos.</small></label>
       <label>Número de serie <em>*</em><input required pattern="[A-Za-z0-9][A-Za-z0-9._\-]{0,59}" name="serie" maxlength="60" placeholder="SN-DEMO-007" value="{{ values.get('serie', '') }}"><small>Serie única. Si no tiene serie, asigna un identificador interno único.</small></label>
       <label class="full">Descripción del equipo <em>*</em><input required name="descripcion" maxlength="180" placeholder="Ejemplo: Monitor de 24 pulgadas" value="{{ values.get('descripcion', '') }}"></label>

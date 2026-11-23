@@ -18,6 +18,7 @@ jobs:
       - name: Sintaxis de Python y Bash
         run: |
           python3 -m compileall -q app tests
+          python3 tests/unidad_v3.py
           for f in scripts/*.sh; do bash -n "$f"; done
       - name: Configuracion de laboratorio CI
         run: |
@@ -35,7 +36,7 @@ jobs:
         run: |
           docker compose down
           docker compose up -d --no-build --wait --wait-timeout 240
-          curl --retry 10 --retry-all-errors -fsS http://127.0.0.1:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["registros"] == 7 and d["estado"] == "ok"; print("Persistencia comprobada:",d)'
+          curl --retry 10 --retry-all-errors -fsS http://127.0.0.1:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["registros"] == 66 and d["estado"] == "ok"; print("Persistencia comprobada:",d)'
       - name: Respaldo y restauracion aislada
         run: |
           archivo=$(bash scripts/respaldo.sh)

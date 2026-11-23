@@ -35,12 +35,12 @@ Para autenticarte por HTTPS, usa el mecanismo de autenticación de GitHub o un t
 Crea una cuenta y un repositorio llamado `inventario-activos` en Docker Hub. Para una demostración académica puedes elegir público si el código solo contiene datos ficticios y no secretos. Genera un token de escritura. Desde la raíz:
 
 ```bash
-sudo bash scripts/publicar_imagen.sh USUARIO_DOCKERHUB v1.0.0
+sudo bash scripts/publicar_imagen.sh USUARIO_DOCKERHUB v3.0.0
 ```
 
 El script solicita iniciar sesión, construye `./app`, etiqueta y publica la imagen. El token se introduce como contraseña cuando Docker lo solicite. No uses contraseña o token en argumentos. La imagen contiene el código de Flask, no la base de datos ni las credenciales `.env`. Cierra la sesión del registro después de usarla con `sudo docker logout` si no requieres acceso posterior a una imagen privada.
 
-Para demostrar descarga y uso, añade o modifica la línea `APP_IMAGE=USUARIO_DOCKERHUB/inventario-activos:v1.0.0` en `.env` (sin cambiar ninguna otra variable). Después:
+Para demostrar descarga y uso, añade o modifica la línea `APP_IMAGE=USUARIO_DOCKERHUB/inventario-activos:v3.0.0` en `.env` (sin cambiar ninguna otra variable). Después:
 
 ```bash
 sudo docker compose pull app
@@ -53,7 +53,7 @@ curl -fsS http://localhost:8080/health
 
 Si el repositorio es privado debes estar autenticado. Si tu puerto no es 8080, usa el valor de HTTP_PORT. Para volver a la compilación local, elimina APP_IMAGE de `.env`, y ejecuta `sudo docker compose up -d --build`. Si compartes el proyecto en una arquitectura distinta (por ejemplo ARM64), construye/publica una imagen para esa plataforma o usa compilación local.
 
-Evidencias: repositorio GitHub, commits, página Docker Hub con etiqueta v1.0.0 y `docker compose images`.
+Evidencias: repositorio GitHub, commits, página Docker Hub con etiqueta v3.0.0 y `docker compose images`.
 
 ## 3. Avance 3: GitHub Actions
 

@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- Inventario genérico de activos. DATOS 100% FICTICIOS para uso academico.
 -- Este script se ejecuta SOLO al crear por primera vez el volumen vacio de MySQL.
 
@@ -53,3 +54,7 @@ INSERT INTO equipos (codigo_inventario, descripcion, tipo_id, marca, modelo, ser
 ('INV-004','Switch de 24 puertos',4,'Marca demo D','SW-24','SN-DEMO-004',5,'Almacén / Estante C3','Sin asignar'),
 ('INV-005','Taladro eléctrico',5,'Marca demo E','HER-5','SN-DEMO-005',3,'Mesa de mantenimiento','Usuario de ejemplo 02'),
 ('INV-006','Silla de oficina',6,'Marca demo F','MOB-1','SN-DEMO-006',1,'Almacén / Área D1','Sin asignar');
+
+-- Solo instalaciones nuevas; la migración de la aplicación carga la demo una vez.
+CREATE TABLE IF NOT EXISTS demo_v3_pendiente (id INT PRIMARY KEY, pendiente BOOLEAN NOT NULL);
+INSERT IGNORE INTO demo_v3_pendiente VALUES (1,TRUE);

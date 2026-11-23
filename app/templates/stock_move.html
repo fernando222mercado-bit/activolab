@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="back-row"><a href="{{ url_for('index') }}">← Inventario</a></div><section class="page-title-row"><div><span class="eyebrow">MOVIMIENTOS DE EXISTENCIAS</span><h1>{{ item.descripcion }}</h1><p class="muted">{{ item.sku }} · {{ item.ubicacion }} · Existencia actual: {{ item.cantidad }}</p></div></section>
+<section class="panel form-panel"><form class="equipment-form" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="form-grid"><label>Movimiento<select name="accion"><option value="ENTRADA">Entrada</option><option value="SALIDA">Salida</option></select></label><label>Cantidad<input name="cantidad" type="number" min="1" max="1000000" required></label><label class="full">Motivo<input name="motivo" maxlength="180" required placeholder="Recepción, préstamo, consumo..."></label></div><div class="form-actions"><button class="btn btn-primary">Guardar movimiento</button></div></form></section>
+{% endblock %}

@@ -2,16 +2,21 @@
 {% block content %}
 <section class="page-title-row">
   <div><span class="eyebrow">PANEL DE INVENTARIO</span><h1>{{ app_name }}</h1><p class="muted">Administra activos, ubicaciones y estados desde un solo lugar.</p></div>
-  {% if usuario.rol == "admin" %}<a class="btn btn-primary" href="{{ url_for('new_equipment') }}">＋ Registrar equipo</a>{% endif %}
+  {% if usuario.rol == 'admin' %}<div class="filter-actions"><a class="btn btn-primary" href="{{ url_for('new_equipment') }}">＋ Unidades individuales</a><a class="btn btn-secondary" href="{{ url_for('new_stock') }}">＋ Consumible</a></div>{% endif %}
 </section>
 <section class="stat-grid" aria-label="Resumen de equipos">
-  <article class="stat-card"><div class="stat-label">Total registrados</div><strong>{{ resumen.total or 0 }}</strong><span class="stat-bottom">Todos los estados</span></article>
-  <article class="stat-card"><div class="stat-label">Disponibles</div><strong>{{ resumen.disponibles or 0 }}</strong><span class="stat-bottom">En almacén</span></article>
+  <article class="stat-card"><div class="stat-label">Activos registrados</div><strong>{{ resumen.total or 0 }}</strong><span class="stat-bottom">Todos los estados</span></article>
+  <article class="stat-card"><div class="stat-label">Disponibles</div><strong>{{ resumen.disponibles or 0 }}</strong><span class="stat-bottom">Activos individuales</span></article>
   <article class="stat-card"><div class="stat-label">Asignados</div><strong>{{ resumen.asignados or 0 }}</strong><span class="stat-bottom">En operación o pruebas</span></article>
   <article class="stat-card"><div class="stat-label">Dados de baja</div><strong>{{ resumen.bajas or 0 }}</strong><span class="stat-bottom">Histórico conservado</span></article>
 </section>
+<section class="stat-grid stock-stats" aria-label="Artículos y existencias">
+  <article class="stat-card"><div class="stat-label">Artículos distintos</div><strong>{{ articulos_total }}</strong><span class="stat-bottom">Grupos de activos + consumibles</span></article>
+  <article class="stat-card"><div class="stat-label">Unidades de consumibles</div><strong>{{ stock_summary.total }}</strong><span class="stat-bottom">Existencias por cantidad</span></article>
+  <article class="stat-card"><div class="stat-label">Unidades en inventario</div><strong>{{ (resumen.total or 0) - (resumen.bajas or 0) + stock_summary.total }}</strong><span class="stat-bottom">Activos sin baja + consumibles</span></article>
+</section>
 <section class="panel inventory-panel">
-  <div class="panel-head"><div><h2>Listado de equipos</h2><p class="muted">Consulta y actualiza los registros almacenados en MySQL.</p></div><span class="pill">{{ equipos|length }} resultados</span></div>
+  <div class="panel-head"><div><h2>Artículos con seguimiento individual</h2><p class="muted">Agrupados por descripción, categoría, marca y modelo. Despliega cada grupo para ver sus unidades.</p></div><span class="pill">{{ grupos|length }} grupos · {{ equipos|length }} unidades</span></div>
   <form method="get" action="{{ url_for('index') }}" class="filter-bar">
     <label class="search-label">Buscar equipos
       <input aria-label="Buscar por código, nombre, serie o ubicación" name="q" value="{{ q }}" placeholder="Código, equipo, serie o ubicación" maxlength="80">
@@ -24,11 +29,15 @@
     </label>
     <div class="filter-actions"><button type="submit" class="btn btn-secondary">Filtrar</button><a class="btn btn-ghost" href="{{ url_for('index') }}">Limpiar</a></div>
   </form>
+  {% for grupo in grupos %}
+  <details class="article-group" {% if q or filtro_estado or grupos|length == 1 %}open{% endif %}>
+    <summary><div><strong>{{ grupo.descripcion }}</strong><span class="sub-cell">{{ grupo.tipo }} · {{ grupo.marca or 'Sin marca' }} · {{ grupo.modelo or 'Sin modelo' }}</span></div><div class="group-count"><b>{{ grupo.total }}</b> unidades · <span class="status available">{{ grupo.stock }} disponibles</span>{% if grupo.minimo and grupo.stock <= grupo.minimo %} <span class="status maintenance">Stock bajo</span>{% endif %}</div></summary>
+    <div class="group-tools"><span class="muted">{{ grupo.units|length }} registros mostrados · mínimo: {{ grupo.minimo }}</span>{% if usuario.rol == 'admin' %}<a class="btn btn-secondary" href="{{ url_for('new_equipment',grupo=grupo.key) }}">＋ Agregar unidades</a><form method="post" action="{{ url_for('set_minimum',clave=grupo.key) }}" class="mini-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label>Mínimo<input type="number" name="minimo" min="0" max="1000000" value="{{ grupo.minimo }}" required></label><button class="btn btn-secondary">Guardar</button></form>{% endif %}</div>
   <div class="table-scroll">
     <table>
       <thead><tr><th>Código</th><th>Descripción / Serie</th><th>Tipo</th><th>Estado</th><th>Ubicación</th><th>Responsable</th><th>Acciones</th></tr></thead>
       <tbody>
-        {% for e in equipos %}
+        {% for e in grupo.units %}
         <tr>
           <td class="code-cell">{{ e.codigo_inventario }}</td>
           <td><strong class="name-cell">{{ e.descripcion }}</strong><span class="sub-cell">{{ e.serie }} · {{ e.marca or 'Sin marca' }}</span></td>
@@ -49,6 +58,15 @@
       </tbody>
     </table>
   </div>
-  <div class="table-footer">Mostrando hasta 250 registros · Control de activos {% if usuario.rol in ("admin", "almacen") %}· <a href="{{ url_for('movements') }}">Ver historial de movimientos →</a>{% endif %}</div>
+  </details>
+  {% else %}<p class="empty">No hay unidades con esos filtros.</p>{% endfor %}
+  <div class="table-footer">Los totales del grupo no cambian al filtrar sus unidades · Control de activos {% if usuario.rol in ("admin", "almacen") %}· <a href="{{ url_for('movements') }}">Ver historial de movimientos →</a>{% endif %}</div>
+</section>
+<section class="panel inventory-panel">
+ <div class="panel-head"><div><h2>Artículos por cantidad</h2><p class="muted">Consumibles sin serie individual. Se comparten los filtros de arriba.</p></div><span class="pill">{{ consumibles|length }} artículos</span></div>
+ <div class="table-scroll"><table><thead><tr><th>SKU</th><th>Artículo</th><th>Ubicación</th><th>Existencia</th><th>Mínimo</th><th>Acciones</th></tr></thead><tbody>
+ {% for c in consumibles %}<tr><td class="code-cell">{{ c.sku }}</td><td><strong>{{ c.descripcion }}</strong><span class="sub-cell">{{ c.tipo }}</span></td><td>{{ c.ubicacion }}</td><td><span class="status {{ 'maintenance' if c.cantidad <= c.minimo else 'available' }}">{{ c.cantidad }}{% if c.cantidad <= c.minimo %} · Stock bajo{% endif %}</span></td><td>{% if usuario.rol == 'admin' %}<form class="mini-form" method="post" action="{{ url_for('stock_minimum',cid=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input aria-label="Mínimo" type="number" name="minimo" value="{{ c.minimo }}" min="0" max="1000000" required><button class="btn btn-secondary">Guardar</button></form>{% else %}{{ c.minimo }}{% endif %}</td><td>{% if usuario.rol in ('admin','almacen') %}<a class="action-link" href="{{ url_for('stock_move',cid=c.id) }}">Entrada / salida</a>{% else %}Solo consulta{% endif %}</td></tr>
+ {% else %}<tr><td colspan="6" class="empty">No hay consumibles con esos filtros.</td></tr>{% endfor %}
+ </tbody></table></div>
 </section>
 {% endblock %}
