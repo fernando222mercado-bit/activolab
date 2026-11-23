@@ -1,4 +1,4 @@
-# Actualización ActivoLab: tres perfiles de usuario (v2)
+# Actualización ActivoLab: tres perfiles de usuario v1
 
 **Lee primero [Usuarios y permisos](docs/USUARIOS_Y_PERMISOS.md)** para instalar o actualizar sin perder registros. El administrador inicial utiliza APP_USERNAME / APP_PASSWORD solo al crear la tabla de cuentas; después se administran desde la web. La identidad se configura desde el menú Configuración.
 
